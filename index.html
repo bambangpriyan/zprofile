@@ -213,6 +213,21 @@
       font-family: var(--font-code);
     }
 
+    /* — Fixed Aspect Ratio for Modal Image — */
+    #modal-image-container {
+      width: 100%;
+      aspect-ratio: 16 / 9; /* fixed ratio: adjust as needed */
+      border-radius: 4px;
+      overflow: hidden;
+      background: #111;
+    }
+    #modal-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
     /* — Sample Code (original style) — */
     pre {
       background: rgba(0, 0, 0, 0.6);
@@ -346,7 +361,7 @@
         <h3>Latest Project Screenshot</h3>
         <div class="grid-feed">
           <!-- Example feed items with data attributes for modal -->
-          <div class="feed-item" data-title="Card Generator" data-subtext="Generate custom business cards with ease" data-images='["card.png", "card2.png", "card3.png"]' data-url="https://example.com/card-generator">
+          <div class="feed-item" data-title="Card Generator" data-subtext="Generate custom business cards with ease" data-images='["card.png", "card2.png", "card3.png"]' data-url="https://bambangpriyan.github.io/cardprofile/cardpage.html">
             <img src="card.png" alt="Project One Screenshot" />
             <div class="overlay"><h4>Card Generator</h4></div>
           </div>
@@ -433,7 +448,7 @@
       <h3 id="modal-title"></h3>
       <p id="modal-subtext"></p>
       <div id="modal-image-container">
-        <img id="modal-image" src="" alt="Project Image" style="max-width:100%; border-radius:4px;" />
+        <img id="modal-image" src="" alt="Project Image" />
       </div>
       <div class="modal-controls">
         <button id="modal-prev">Prev</button>
