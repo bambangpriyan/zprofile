@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gen Z Dev Profile – Feed Gallery</title>
+  <style>
+    /* — Variables — */
+    :root {
+      --bg: #000;
+      --card-bg: rgba(30,30,30,0.7);
+      --card-bg-alt: rgba(30,30,30,0.5);
+      --accent: #ffeb3b;
+      --text: #fff;
+      --overlay-bg: rgba(0,0,0,0.6);
+      --decor-color: #ffeb3b;
+      --font-code: 'Fira Code', 'Source Code Pro', monospace;
+    }
+
+    /* — Global Reset — */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-code);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* — Header — */
+    header {
+      background: var(--card-bg);
+      padding: 0.8rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid rgba(255,255(),255,0.1);
+    }
+    .circle { width:12px; height:12px; border-radius:50%; background:#ff5f56; }
+    .circle.yellow { background:#ffbd2e; }
+    .circle.green  { background:#27c93f; }
+    .title { flex:1; text-align:center; font-size:0.9rem; }
+
+    /* — Layout — */
+    .container {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      flex:1;
+    }
+    @media (max-width:768px) {
+      .container { grid-template-columns:1fr; }
+    }
+
+    /* — Sidebar — */
+    .sidebar {
+      background: var(--card-bg);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius:8px;
+      padding:1rem;
+      text-align:center;
+    }
+    .avatar {
+      width:100px; height:100px;
+      border-radius:50%;
+      border:2px solid var(--accent);
+      object-fit:cover;
+    }
+    .name { margin-top:0.8rem; font-size:1.2rem; color:var(--accent); }
+    .status { font-size:0.85rem; opacity:0.8; margin-bottom:0.8rem; }
+    .stats { display:flex; justify-content:center; gap:0.6rem; }
+    .stat {
+      background: var(--card-bg-alt);
+      padding:0.3rem 0.6rem;
+      border-radius:4px;
+      font-size:0.85rem;
+    }
+
+    /* — Main — */
+    .main { display:flex; flex-direction:column; gap:1.5rem; }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(5px);
+      border:1px solid rgba(255,255,255,0.1);
+      border-radius:8px;
+      padding:1rem;
+      position:relative;
+      overflow:hidden;
+      transition: transform .3s, box-shadow .3s;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+    }
+
+    .card h3 {
+      font-size:1rem;
+      color:var(--accent);
+      margin-bottom:1rem;
+      position:relative;
+    }
+    .card h3::before {
+      content: '›';
+      margin-right:0.4rem;
+      font-weight:bold;
+    }
+
+    /* — Instagram-style Grid Feed — */
+    .projects-grid .grid-feed {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+    .projects-grid .feed-item {
+      position: relative;
+      overflow: hidden;
+      border-radius:8px;
+      cursor: pointer;
+      animation: float 6s ease-in-out infinite;
+      transition: transform .3s, box-shadow .3s;
+    }
+    .projects-grid .feed-item img {
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      transition: transform .5s;
+    }
+    .projects-grid .feed-item .overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      padding: 0.5rem;
+      background: var(--overlay-bg);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .projects-grid .feed-item .overlay h4 {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    .projects-grid .feed-item:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+      animation-play-state: paused;
+    }
+    .projects-grid .feed-item:hover img {
+      transform: scale(1.1);
+    }
+    .projects-grid .feed-item:hover .overlay {
+      opacity: 1;
+    }
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    /* — Modal Styles — */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal.hidden {
+      display: none;
+    }
+    .modal-content {
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: 8px;
+      max-width: 90%;
+      max-height: 90%;
+      overflow: auto;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.75rem;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--accent);
+    }
+    .modal-controls {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .modal-controls button {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      background: var(--accent);
+      cursor: pointer;
+      font-family: var(--font-code);
+    }
+
+    /* — Sample Code (original style) — */
+    pre {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 0.8rem;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-family: var(--font-code);
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    code { color: #8be9fd; }
+
+    /* — Footer & Toggle — */
+    footer {
+      background: var(--card-bg);
+      backdrop-filter: blur(5px);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      position: relative;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      max-height: 1.6rem;
+      padding: 0.3rem 1rem;
+    }
+    .footer-toggle {
+      position: absolute;
+      top: -0.8rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 4px;
+      padding: 0.2rem 0.4rem;
+      cursor: pointer;
+      z-index: 10;
+    }
+    .footer-toggle .icon {
+      display: inline-block;
+      transition: transform 0.3s ease;
+    }
+    footer.expanded {
+      max-height: 200px;
+      padding: 1rem;
+    }
+    footer.expanded .socials,
+    footer.expanded .info,
+    footer.expanded .decor {
+      display: flex;
+    }
+    footer.expanded .footer-toggle .icon {
+      transform: rotate(180deg);
+    }
+
+    /* — Always-show, vertical social list — */
+    .socials {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+    .socials a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    .socials a::after {
+      content: attr(data-index);
+      margin-left: 0.2rem;
+      opacity: 0.7;
+    }
+
+    .info {
+      display: none;
+      flex-direction: column;
+      align-items: flex-end;
+      font-size: 0.9rem;
+      gap: 0.3rem;
+    }
+    .info .email {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+    .decor {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: -5%;
+      width: 10px;
+      height: 10px;
+      background: var(--decor-color);
+      border-radius: 50%;
+      animation: moveRight 4s linear infinite;
+    }
+    @keyframes moveRight {
+      0% { transform: translateX(0) translateY(-50%); }
+      100% { transform: translateX(110vw) translateY(-50%); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Terminal-style Header -->
+  <header>
+    <span class="circle"></span>
+    <span class="circle yellow"></span>
+    <span class="circle green"></span>
+    <span class="title">priyanto.cv — Profile.html</span>
+  </header>
+
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <img src="haewon.jpg" alt="Avatar" class="avatar" />
+      <div class="name">Priyanto</div>
+      <div class="status">// Full-stack enthusiast & coffee lover</div>
+      <div class="stats">
+        <div class="stat">★ 100k Followers</div>
+        <div class="stat">✎ 412 Repos</div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- About -->
+      <section class="card">
+        <h3>About Me</h3>
+        <p>Hi there! I'm Priyanto, a passionate developer who crafts elegant, performant web experiences. I love experimenting with new technologies, contributing to open-source, and brewing the perfect espresso.</p>
+      </section>
+
+      <!-- Latest Project Screenshot Grid -->
+      <section class="card projects-grid">
+        <h3>Latest Project Screenshot</h3>
+        <div class="grid-feed">
+          <!-- Example feed items with data attributes for modal -->
+          <div class="feed-item" data-title="Card Generator" data-subtext="Generate custom business cards with ease" data-images='["card.png", "card2.png", "card3.png"]' data-url="https://example.com/card-generator">
+            <img src="card.png" alt="Project One Screenshot" />
+            <div class="overlay"><h4>Card Generator</h4></div>
+          </div>
+          <div class="feed-item" data-title="Project Two" data-subtext="A cool web app" data-images='["jiwoo.jpg"]' data-url="https://example.com/project-two">
+            <img src="jiwoo.jpg" alt="Project Two Screenshot" />
+            <div class="overlay"><h4>Project Two</h4></div>
+          </div>
+          <div class="feed-item" data-title="Card Generator" data-subtext="Generate custom business cards with ease" data-images='["haewon.jpg", "haewona.jpg", "haewonb.jpg"]' data-url="https://example.com/card-generator">
+            <img src="haewon.jpg" alt="Project One Screenshot" />
+            <div class="overlay"><h4>Card Generator</h4></div>
+          </div>
+          <div class="feed-item" data-title="Project Two" data-subtext="A cool web app" data-images='["jiwoo.jpg"]' data-url="https://example.com/project-two">
+            <img src="jiwoo.jpg" alt="Project Two Screenshot" />
+            <div class="overlay"><h4>Project Two</h4></div>
+          </div>
+          <div class="feed-item" data-title="Card Generator" data-subtext="Generate custom business cards with ease" data-images='["jiwoo.png", "jiwoo2.png"]' data-url="https://example.com/card-generator">
+            <img src="jiwoo.png" alt="Project One Screenshot" />
+            <div class="overlay"><h4>Card Generator</h4></div>
+          </div>
+          <div class="feed-item" data-title="Project Two" data-subtext="A cool web app" data-images='["jiwoo.jpg"]' data-url="https://example.com/project-two">
+            <img src="jiwoo.jpg" alt="Project Two Screenshot" />
+            <div class="overlay"><h4>Project Two</h4></div>
+          </div>
+          <div class="feed-item" data-title="Card Generator" data-subtext="Generate custom business cards with ease" data-images='["jiwoo.png", "jiwoo2.png"]' data-url="https://example.com/card-generator">
+            <img src="jiwoo.png" alt="Project One Screenshot" />
+            <div class="overlay"><h4>Card Generator</h4></div>
+          </div>
+          <div class="feed-item" data-title="Project Two" data-subtext="A cool web app" data-images='["jiwoo.jpg"]' data-url="https://example.com/project-two">
+            <img src="jiwoo.jpg" alt="Project Two Screenshot" />
+            <div class="overlay"><h4>Project Two</h4></div>
+          </div>
+          <div class="feed-item" data-title="Card Generator" data-subtext="Generate custom business cards with ease" data-images='["jiwoo.png", "jiwoo2.png"]' data-url="https://example.com/card-generator">
+            <img src="jiwoo.png" alt="Project One Screenshot" />
+            <div class="overlay"><h4>Card Generator</h4></div>
+          </div>
+          <div class="feed-item" data-title="Project Two" data-subtext="A cool web app" data-images='["jiwoo.jpg"]' data-url="https://example.com/project-two">
+            <img src="jiwoo.jpg" alt="Project Two Screenshot" />
+            <div class="overlay"><h4>Project Two</h4></div>
+          </div>
+          <div class="feed-item" data-title="Card Generator" data-subtext="Generate custom business cards with ease" data-images='["jiwoo.png", "jiwoo2.png"]' data-url="https://example.com/card-generator">
+            <img src="jiwoo.png" alt="Project One Screenshot" />
+            <div class="overlay"><h4>Card Generator</h4></div>
+          </div>
+          <div class="feed-item" data-title="Project Two" data-subtext="A cool web app" data-images='["jiwoo.jpg"]' data-url="https://example.com/project-two">
+            <img src="jiwoo.jpg" alt="Project Two Screenshot" />
+            <div class="overlay"><h4>Project Two</h4></div>
+          </div>
+          <!-- Repeat for other items, add data attributes accordingly -->
+        </div>
+      </section>
+
+      <!-- Sample Code -->
+      <section class="card">
+        <h3>Sample Code</h3>
+        <pre><code>&lt;div class="glass-button"&gt;
+  &lt;button&gt;Generate Card&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+      </section>
+    </main>
+  </div>
+
+  <!-- Footer (socials now always visible vertically) -->
+  <footer id="site-footer">
+    <div class="footer-toggle" id="footer-toggle">
+      <span class="icon">⌄</span>
+    </div>
+    <div class="socials">
+      <a href="#" data-index="1">Instagram</a>
+      <a href="#" data-index="2">Twitter</a>
+      <a href="#" data-index="3">LinkedIn</a>
+      <a href="#" data-index="4">Reading</a>
+    </div>
+    <div class="info">
+      <div class="tagline">Let's build something together.</div>
+      <div class="email">xyz@gmail.com</div>
+    </div>
+    <div class="decor"></div>
+  </footer>
+
+  <!-- Modal Structure -->
+  <div id="project-modal" class="modal hidden">
+    <div class="modal-content">
+      <span id="modal-close" class="modal-close">&times;</span>
+      <h3 id="modal-title"></h3>
+      <p id="modal-subtext"></p>
+      <div id="modal-image-container">
+        <img id="modal-image" src="" alt="Project Image" style="max-width:100%; border-radius:4px;" />
+      </div>
+      <div class="modal-controls">
+        <button id="modal-prev">Prev</button>
+        <button id="modal-next">Next</button>
+        <button id="modal-continue">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Footer toggle
+    const footer = document.getElementById('site-footer');
+    const toggle = document.getElementById('footer-toggle');
+    toggle.addEventListener('click', () => {
+      footer.classList.toggle('expanded');
+    });
+
+    // Modal logic
+    const modal = document.getElementById('project-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalSubtext = document.getElementById('modal-subtext');
+    const modalImage = document.getElementById('modal-image');
+    const btnPrev = document.getElementById('modal-prev');
+    const btnNext = document.getElementById('modal-next');
+    const btnClose = document.getElementById('modal-close');
+    const btnContinue = document.getElementById('modal-continue');
+
+    let currentImages = [];
+    let currentIndex = 0;
+    let currentUrl = '#';
+
+    document.querySelectorAll('.feed-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const title = item.dataset.title;
+        const subtext = item.dataset.subtext;
+        currentImages = JSON.parse(item.dataset.images);
+        currentUrl = item.dataset.url;
+        currentIndex = 0;
+        modalTitle.textContent = title;
+        modalSubtext.textContent = subtext;
+        modalImage.src = currentImages[currentIndex];
+        modal.classList.remove('hidden');
+      });
+    });
+
+    btnPrev.addEventListener('click', () => {
+      if (currentImages.length > 1) {
+        currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
+        modalImage.src = currentImages[currentIndex];
+      }
+    });
+    btnNext.addEventListener('click', () => {
+      if (currentImages.length > 1) {
+        currentIndex = (currentIndex + 1) % currentImages.length;
+        modalImage.src = currentImages[currentIndex];
+      }
+    });
+    btnClose.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+    btnContinue.addEventListener('click', () => {
+      window.open(currentUrl, '_blank');
+    });
+
+    // Close modal on outside click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>
